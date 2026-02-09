@@ -8,10 +8,6 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
-const Product = require('../models/product');
-
-const Product = require('../models/product');
-
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
   const imageUrl = req.body.imageUrl;
