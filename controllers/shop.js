@@ -1,7 +1,20 @@
 const Product = require('../models/product');
+const { Op } = require("sequelize");
+
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.findAll({
+    where: {
+      price:{ [Op.gt] : 20} 
+    //  price:{ [Op.lt] : 20} 
+    //  price:{ [Op.eq] : 20} 
+    //  price:{ [Op.lte] : 20} 
+    //  price:{ [Op.gte] : 20} 
+    //  price:{ [Op.between] : [20,99] } 
+    //  price:{ [Op.in] : [20,99] } 
+    //  price:{ [Op.like] : '%the' } 
+    },
+  })
     .then(products => {
       res.render('shop/product-list', {
         prods: products,
