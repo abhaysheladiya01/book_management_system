@@ -6,6 +6,7 @@ const sendgridTransport = require ('nodemailer-sendgrid-transport');
 
 
 const User = require('../models/user');
+const user = require('../models/user');
 
 const transporter = nodemailer.createTransport(sendgridTransport({
   auth: {
@@ -166,3 +167,62 @@ exports.postReset = (req, res, next) => {
     })
   })
 }
+
+exports.getNewPassword = (req, res, next) => {
+  const token = req.params.token;
+
+  User.findOne({
+    resetToken: token,
+    resetTokenExpiration: { $gt: new Date() }
+  })
+  .then(user => {
+    if (!user) {
+      return res.redirect('/'); 
+    }
+    let message = req.flash('error');
+    message = message.length > 0 ? message[0] : null;
+
+    res.render('auth/new-password', {
+      path: '/new-password',
+      pageTitle: 'New Password',
+      errorMessage: message,
+      userId: user._id.toString(),
+      passwordToken: token
+    });
+  })
+  .catch(err => {
+    console.log(err);
+  });
+};
+
+exports.postNewPassword = (req, res, next) => {
+  const newPassword = req.body.password;
+  const userId = req.body.userId;
+  const passwordToken = req.body.passwordToken;
+
+  User.findOne({
+    resetToken: passwordToken,
+    resetTokenExpiration: { $gt: Date.now() },
+    _id: userId
+  })
+  .then(user => {
+    if (!user) {
+      return res.status(400).send("Invalid or expired token.");
+    }
+
+    return bcrypt.hash(newPassword, 12)
+      .then(hashedPassword => {
+        user.password = hashedPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpiration = undefined;
+        return user.save(); 
+      });
+  })
+  .then(result => {
+    res.redirect('/login');
+  })
+  .catch(err => {
+    console.log(err);
+    res.status(500).send("An error occurred while resetting the password.");
+  });
+};
