@@ -1,7 +1,7 @@
-exports.mapProductData = (body, userId) => ({
+exports.mapProductData = (body, userId, imageUrl = null) => ({
   title: body.title,
   price: body.price,
   description: body.description,
-  imageUrl: body.imageUrl,
+  imageUrl: imageUrl || body.imageUrl,
   userId
 });

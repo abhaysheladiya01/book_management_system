@@ -11,7 +11,6 @@ const handleValidation = (req, res, next) => {
 
 exports.productValidation = [
   body('title').isString().isLength({ min: 3 }).trim(),
-  body('imageUrl').isURL().withMessage('Please enter a valid URL.'),
   body('price').isFloat().withMessage('Please enter a valid price.'),
   body('description').isLength({ min: 5, max: 400 }).trim(),
   handleValidation

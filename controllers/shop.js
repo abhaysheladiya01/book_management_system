@@ -1,6 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+
+const PDFDocument = require('pdfkit');
+
 const Product = require('../models/product');
 const Order = require('../models/order');
 const authHelper = require('../helpers/auth');
+const product = require('../models/product');
 
 
 
@@ -49,16 +55,17 @@ exports.getCart = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
     .then(user => {
-      const products = user.cart.items;
+      const products = user.cart.items.filter(i => i.productId != null);
+
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
         products: products
       });
     })
-  .catch(err => authHelper.handleError(err, next));
-
+    .catch(err => authHelper.handleError(err, next));
 };
+
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
@@ -87,9 +94,14 @@ exports.postOrder = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
     .then(user => {
-      const products = user.cart.items.map(i => {
-        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      const validItems = user.cart.items.filter(i => i.productId != null);
+      const products = validItems.map(i => {
+        return { 
+          quantity: i.quantity, 
+          product: { ...i.productId._doc } 
+        };
       });
+
       const order = new Order({
         user: {
           email: req.user.email,
@@ -97,17 +109,16 @@ exports.postOrder = (req, res, next) => {
         },
         products: products
       });
-      return order.save();
-    })
-    .then(result => {
-      return req.user.clearCart();
+      return order.save().then(() => {
+        return req.user.clearCart();
+      });
     })
     .then(() => {
       res.redirect('/orders');
     })
     .catch(err => authHelper.handleError(err, next));
-
 };
+
 
 exports.getOrders = (req, res, next) => {
   Order.find({ 'user.userId': req.user._id })
@@ -120,4 +131,63 @@ exports.getOrders = (req, res, next) => {
     })
   .catch(err => authHelper.handleError(err, next));
 
+};
+
+exports.getInvoice = (req, res, next) => {
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+    .then(order => {
+      if (!order) {
+        return next(new Error('No order found.'));
+      }
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return next(new Error('Unauthorized.'));
+      }
+
+      const invoiceName = 'invoice-' + orderId + '.pdf';
+      const invoicePath = path.join(__dirname, '..', 'data', 'invoice', invoiceName);
+
+      const pdfDoc = new PDFDocument();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      pdfDoc.fontSize(26).text('Invoice', {
+        underline: true
+      });
+      pdfDoc.text('---------------------');
+
+      let totalPrice = 0;
+      order.products.forEach(prod =>{
+        totalPrice += prod.quantity * prod.product.price;
+        pdfDoc.fontSize(14).text(
+        prod.product.title + '-' + prod.quantity + 'X' + '$' + prod.product.price
+      );
+      });
+      pdfDoc.text('---------------');
+      pdfDoc.fontSize(20).text('Text Price: $' + totalPrice);
+    
+      pdfDoc.end();
+
+      // fs.access(invoicePath, fs.constants.F_OK, (err) => {
+      //   if (err) {
+      //     return next(new Error('Invoice file not found.'));
+      //   }
+
+      //   res.setHeader('Content-Type', 'application/pdf');
+      //   res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+
+      //   res.sendFile(invoicePath, (err) => {
+      //     if (err) {
+      //       return next(err);
+      //     }
+      //   });
+      // });
+
+      const file = fs.createReadStream(invoicePath);
+
+      file.pipe(res);
+    })
+    .catch(err => next(err));
 };
