@@ -1,6 +1,8 @@
 require("dotenv").config();
 const crypto = require("crypto");
 const User = require("../models/user");
+const authHelper = require('../helpers/auth');
+
 
 
 const {
@@ -68,11 +70,8 @@ exports.postLogin = (req, res, next) => {
         res.redirect("/login");
       });
     })
-    .catch((err) => {
-     const error = new Error(err);
-     error.httpStatusCode = 500;
-     return next(error);
-    });
+   .catch(err => authHelper.handleError(err, next));
+
 };
 
 exports.postSignup = (req, res, next) => {
@@ -105,11 +104,8 @@ exports.postSignup = (req, res, next) => {
       });
       res.redirect("/login");
     })
-    .catch((err) => {
-     const error = new Error(err);
-     error.httpStatusCode = 500;
-     return next(error);
-    });
+  .catch(err => authHelper.handleError(err, next));
+
 };
 
 exports.postLogout = (req, res, next) => {
@@ -148,11 +144,8 @@ exports.postReset = (req, res, next) => {
       });
       res.redirect("/");
     })
-    .catch((err) => {
-     const error = new Error(err);
-     error.httpStatusCode = 500;
-     return next(error);
-    });
+.catch(err => authHelper.handleError(err, next));
+
 };
 
 exports.getNewPassword = (req, res, next) => {
@@ -168,11 +161,8 @@ exports.getNewPassword = (req, res, next) => {
         passwordToken: token,
       });
     })
-    .catch((err) => {
-     const error = new Error(err);
-     error.httpStatusCode = 500;
-     return next(error);
-    });
+.catch(err => authHelper.handleError(err, next));
+
 };
 
 exports.postNewPassword = (req, res, next) => {

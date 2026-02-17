@@ -12,3 +12,10 @@ exports.generateToken = () =>
       else resolve(buffer.toString('hex'));
     });
   });
+
+  exports.handleError = (err, next, statusCode = 500) => {
+  if (!err.httpStatusCode) {
+    err.httpStatusCode = statusCode;
+  }
+  return next(err);
+};
