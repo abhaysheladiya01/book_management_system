@@ -1,4 +1,6 @@
 node_modules
 .env
-images
-data
+
+images/
+data/
+data/invoice/

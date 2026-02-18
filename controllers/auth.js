@@ -3,8 +3,6 @@ const crypto = require("crypto");
 const User = require("../models/user");
 const authHelper = require('../helpers/auth');
 
-
-
 const {
   hasValidationErrors,
   renderFormWithValidationErrors,
