@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const PDFDocument = require('pdfkit');
 
 const Product = require('../models/product');
@@ -120,6 +120,81 @@ exports.postCartDeleteProduct = (req, res, next) => {
     })
   .catch(err => authHelper.handleError(err, next));
 
+};
+
+exports.getCheckout =(req, res, next) =>{
+  let products;
+  let total = 0;
+  req.user
+    .populate('cart.items.productId')
+    .then(user => {
+      products = user.cart.items.filter(i => i.productId != null);
+
+     total = 0;
+      products.forEach(p => {
+        total += p.quantity * p.productId.price;
+      });
+
+      return stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: "payment",
+        line_items: products.map(p=>{
+          return{
+            price_data:{
+              currency: "usd",
+              product_data:{
+                name: p.productId.title,
+                description: p.productId.description,
+              },
+              unit_amount: p.productId.price*100,
+            },
+            quantity: p.quantity,
+          };
+        }),
+        success_url: req.protocol + '://' + req.get('host') + '/checkout/success',
+        cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel'
+      });
+    })
+    .then(session =>{
+        res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        totalSum: total,
+        sessionId: session.id,
+        sessionUrl:session.url
+      });
+    })
+    .catch(err => authHelper.handleError(err, next));
+}
+
+exports.getCheckoutSuccess = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .then(user => {
+      const validItems = user.cart.items.filter(i => i.productId != null);
+      const products = validItems.map(i => {
+        return { 
+          quantity: i.quantity, 
+          product: { ...i.productId._doc } 
+        };
+      });
+
+      const order = new Order({
+        user: {
+          email: req.user.email,
+          userId: req.user
+        },
+        products: products
+      });
+      return order.save().then(() => {
+        return req.user.clearCart();
+      });
+    })
+    .then(() => {
+      res.redirect('/orders');
+    })
+    .catch(err => authHelper.handleError(err, next));
 };
 
 exports.postOrder = (req, res, next) => {
