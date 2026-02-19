@@ -119,7 +119,7 @@ exports.updateProduct = (req, res, next) => {
   // const updatedTitle = req.body.title;
   // const updatedPrice = req.body.price;
   // const updatedDesc = req.body.description;
-  const { productId: prodId, title: updatedTitle, price: updatedPrice, description: updatedDesc } = req.body;
+  const { productId: prodId, title, price, description } = req.body;
   const image = req.file;
 
   const errors = validationResult(req);
@@ -130,8 +130,7 @@ exports.updateProduct = (req, res, next) => {
       path: '/admin/edit-product',
       editing: true,
       hasError: true,
-      product: {
-        title: updatedTitle, price: updatedPrice, description: updatedDesc, _id: prodId },
+      product: { title, price, description, _id: prodId },
       errorMessage: errors.array()[0].msg,
       validationErrors: errors.array()
     })
