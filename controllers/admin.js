@@ -28,9 +28,6 @@ exports.showAddProductForm = (req, res, next) => {
 };
 
 exports.listProducts = (req, res, next) => {
-  // const title = req.body.title;
-  // const price = req.body.price;
-  // const description = req.body.description;
   const {title, price, description} = req.body;
   const image = req.file;
 
@@ -59,10 +56,10 @@ exports.listProducts = (req, res, next) => {
       editing: false,
       hasError: true,
       product: {
-        title: title,
-        imageUrl: imageUrl,
-        price: price,
-        description: description
+        title,
+        imageUrl,
+        price,
+        description
       },
       errorMessage: errors.array()[0].msg,
       validationErrors: errors.array()
@@ -72,10 +69,10 @@ exports.listProducts = (req, res, next) => {
   const imageUrl = image.path;
 
   const product = new Product({
-    title: title,
-    price: price,
-    description: description,
-    imageUrl: imageUrl,
+    title,
+    price,
+    description,
+    imageUrl,
     userId: req.user
   });
   product
@@ -115,10 +112,6 @@ exports.getEditProduct = (req, res, next) => {
 };
 
 exports.updateProduct = (req, res, next) => {
-  // const prodId = req.body.productId;
-  // const updatedTitle = req.body.title;
-  // const updatedPrice = req.body.price;
-  // const updatedDesc = req.body.description;
   const { productId: prodId, title, price, description } = req.body;
   const image = req.file;
 
@@ -141,9 +134,9 @@ exports.updateProduct = (req, res, next) => {
       if(product.userId.toString() !== req.user._id.toString()){
         return res.redirect('/');
       }
-      product.title = updatedTitle;
-      product.price = updatedPrice;
-      product.description = updatedDesc;
+      product.title = title;
+      product.price = price;
+      product.description = description;
       if(image) {
         fileHelper.deleteFile(product.imageUrl);
         product.imageUrl = image.path;
