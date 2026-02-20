@@ -3,12 +3,14 @@ const adminController = require('../controllers/admin');
 const isAuth = require('../middleware/is-auth');
 const { productValidation } = require('../middleware/validators');
 
+const upload = require('../middleware/fileUpload');
+
 const router = express.Router();
 
 router.get('/add-product', isAuth, adminController.showAddProductForm);
 router.get('/products', isAuth, adminController.createProduct);
 
-router.post('/product', isAuth, productValidation, adminController.listProducts);
+router.post('/product', isAuth, upload.single('image'), productValidation, adminController.listProducts);
 router.get('/edit-product/:productId', isAuth, adminController.getEditProduct);
 router.post('/edit-product', isAuth, productValidation, adminController.updateProduct);
 

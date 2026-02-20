@@ -9,8 +9,6 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
 
-const fileUpload = require('./middleware/fileUpload');
-
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
@@ -35,8 +33,7 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(fileUpload.single('image'));  
+app.use(bodyParser.urlencoded({ extended: false })); 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images',express.static(path.join(__dirname, 'images')));
 app.use(
