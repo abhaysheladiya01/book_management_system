@@ -1,13 +1,13 @@
 require('dotenv').config();
 const path = require('path');
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
-const MongoStore = require('connect-mongo'); // v6
+const MongoStore = require('connect-mongo');
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const multer = require('multer');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -33,9 +33,9 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false })); 
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use('/images',express.static(path.join(__dirname, 'images')));
 app.use(
   session({
     secret: 'my secret',
@@ -59,7 +59,7 @@ app.use((req, res, next) => {
       next();
     })
     .catch(err => {
-      throw new Error(err);
+      next(err);
     });
 });
 
@@ -77,9 +77,14 @@ app.get('/500', errorController.get500);
 
 app.use(errorController.get404);
 
-app.use((error, req, res, next) =>{
-  res.redirect('/500');
-})
+app.use((error, req, res, next) => {
+  console.log("GLOBAL Error", error);
+  res.status(error.httpStatusCode || 500).render('500', {
+    pageTitle: 'Error!',
+    path: '/500'
+  });
+});
+
 
 mongoose
   .connect(MONGODB_URI)

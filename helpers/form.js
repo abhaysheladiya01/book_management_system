@@ -20,7 +20,7 @@ exports.renderFormWithValidationErrors = (res, template, pageData, reqBody = {},
 
     product: {
       title: reqBody.title || '',
-      imageUrl: reqBody.imageUrl || '',
+      image: req.file || '',
       price: reqBody.price || '',
       description: reqBody.description || '',
       _id: reqBody._id || ''
