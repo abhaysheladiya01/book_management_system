@@ -1,0 +1,21 @@
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+
+exports.hashPassword = (password) => bcrypt.hash(password, 12);
+
+exports.comparePasswords = (inputPassword, hashedPassword) => bcrypt.compare(inputPassword, hashedPassword);
+
+exports.generateToken = () =>
+  new Promise((resolve, reject) => {
+    crypto.randomBytes(32, (err, buffer) => {
+      if (err) reject(err);
+      else resolve(buffer.toString('hex'));
+    });
+  });
+
+  exports.handleError = (err, next, statusCode = 500) => {
+  if (!err.httpStatusCode) {
+    err.httpStatusCode = statusCode;
+  }
+  return next(err);
+};
