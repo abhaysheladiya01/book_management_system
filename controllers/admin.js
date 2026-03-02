@@ -18,6 +18,8 @@ exports.showAddProductForm = (req, res, next) => {
     hasError: false,
     errorMessage: null,
     validationErrors: [],
+    csrfToken: req.csrfToken(),
+
     product: {
       title: "",
       imageUrl: "",

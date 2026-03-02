@@ -1,5 +1,8 @@
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -8,12 +11,16 @@ const MongoStore = require('connect-mongo');
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+
+const fileUpload = require('./middleware/fileUpload');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI =
-  'mongodb+srv://abhaysheladiya_db_user:LkzyVMUOMQPyquhk@cluster0.6vyc8pu.mongodb.net/';
+const MONGODB_URI = process.env.MONGODB_URI
 
 const app = express();
 
@@ -23,8 +30,11 @@ const store = MongoStoreDefault.create({
   mongoUrl: MONGODB_URI,
   collectionName: 'sessions'
 });
-
+7
 const csrfProtection = csrf();
+
+const privateKey = fs.readFileSync('server.key');
+const certificate = fs.readFileSync('server.cert');
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -33,7 +43,16 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-app.use(bodyParser.urlencoded({ extended: false })); 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), 
+    { flags: 'a' }
+);
+
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', { stream: accessLogStream }));
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(fileUpload.single('image'));  
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images',express.static(path.join(__dirname, 'images')));
 app.use(
@@ -89,6 +108,9 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    app.listen(3000, () => console.log('Server running on port 3000'));
+    const PORT = process.env.PORT || 3000;
+
+    https.createServer({ key: privateKey, certi: certificate}, app)
+    .listen(PORT, () => console.log('Server running on port 3000'));
   })
   .catch(err => console.log(err));
