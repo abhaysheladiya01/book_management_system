@@ -1,8 +1,6 @@
 require('dotenv').config();
 const path = require('path');
-const fs = require('fs');
-const https = require('https');
-
+const fs = require('fs'); 
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -20,7 +18,7 @@ const fileUpload = require('./middleware/fileUpload');
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI = process.env.MONGODB_URI
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const app = express();
 
@@ -30,22 +28,18 @@ const store = MongoStoreDefault.create({
   mongoUrl: MONGODB_URI,
   collectionName: 'sessions'
 });
-7
-const csrfProtection = csrf();
 
-const privateKey = fs.readFileSync('server.key');
-const certificate = fs.readFileSync('server.cert');
+const csrfProtection = csrf();
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
+
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), 
-    { flags: 'a' }
-);
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 
 app.use(helmet());
 app.use(compression());
@@ -54,7 +48,8 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(fileUpload.single('image'));  
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/images',express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 app.use(
   session({
     secret: 'my secret',
@@ -93,7 +88,6 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 app.get('/500', errorController.get500);
-
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
@@ -104,13 +98,10 @@ app.use((error, req, res, next) => {
   });
 });
 
-
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
     const PORT = process.env.PORT || 3000;
-
-    https.createServer({ key: privateKey, certi: certificate}, app)
-    .listen(PORT, () => console.log('Server running on port 3000'));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); 
   })
-  .catch(err => console.log(err));
+  .catch(err => console.log("Error connecting to MongoDB:", err));
