@@ -5,5 +5,4 @@ images/
 data/
 data/invoice/
 
-server.cert
 server.key
