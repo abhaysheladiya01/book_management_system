@@ -28,8 +28,6 @@ const store = MongoStoreDefault.create({
   mongoUrl: MONGODB_URI,
   collectionName: 'sessions',
   mongoOptions: {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     tls: true,  // Ensure TLS is used
   }
 });
