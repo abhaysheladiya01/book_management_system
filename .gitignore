@@ -1,8 +1,11 @@
 node_modules
 .env
 
+data/invoice
 images/
 data/
 data/invoice/
+access.log
+server.cert
 
 server.key
