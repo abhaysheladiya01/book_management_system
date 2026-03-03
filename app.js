@@ -26,7 +26,12 @@ const MongoStoreDefault = MongoStore.default || MongoStore;
 
 const store = MongoStoreDefault.create({
   mongoUrl: MONGODB_URI,
-  collectionName: 'sessions'
+  collectionName: 'sessions',
+  mongoOptions: {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    tls: true,  // Ensure TLS is used
+  }
 });
 
 const csrfProtection = csrf();
